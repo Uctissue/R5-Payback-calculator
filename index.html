@@ -261,7 +261,7 @@
 <div class="results-sub" id="t-scenarioDesc">Seleziona lo scenario da analizzare con il cliente:</div>
 <div class="scenario-tabs">
   <button class="scenario-tab active" id="t-tabCrescita" onclick="setScenario('crescita',this)">📈 Scenario crescita — aumento produzione</button>
-  <button class="scenario-tab" id="t-tabEfficienza" onclick="setScenario('efficienza',this)">⚙️ Scenario efficienza — stessa produzione</button>
+  <button class="scenario-tab" id="t-tabEfficienza" onclick="setScenario('stabilita',this)">⚙️ Scenario stabilità — stessa produzione</button>
 </div>
 
 <div id="kpiCards"></div>
@@ -273,7 +273,7 @@
   <div style="margin-bottom:10px;">
     <div class="kpi-row-2">
       <div class="result-highlight" id="printPaybackCrescita" style="padding:12px 14px;">
-        <div class="label">Payback semplice</div><div class="value" id="printPayback1">—</div>
+        <div class="label">Payback</div><div class="value" id="printPayback1">—</div>
         <div class="sub" id="printSub1">—</div>
         <div class="payback-bar"><div class="payback-fill" id="print-fill-1" style="width:0%"></div></div>
       </div>
@@ -284,12 +284,12 @@
     </div>
   </div>
   <div class="page-break" style="display:none;"></div>
-  <div class="scenario-label" style="display:none;">⚙️ Scenario efficienza — stessa produzione</div>
+  <div class="scenario-label" style="display:none;">⚙️ Scenario stabilità — stessa produzione</div>
   <div id="printKpiEfficienza"></div>
   <div>
     <div class="kpi-row-2">
       <div class="result-highlight" id="printPaybackEfficienza" style="padding:12px 14px;">
-        <div class="label">Payback semplice</div><div class="value" id="printPayback2">—</div>
+        <div class="label">Payback</div><div class="value" id="printPayback2">—</div>
         <div class="sub" id="printSub2">—</div>
         <div class="payback-bar"><div class="payback-fill" id="print-fill-2" style="width:0%"></div></div>
       </div>
@@ -303,7 +303,7 @@
 
 <div class="kpi-row-2" style="margin-bottom:20px;">
   <div class="result-highlight">
-    <div class="label" id="t-paybackL">Payback semplice</div>
+    <div class="label" id="t-paybackL">Payback</div>
     <div class="value" id="res-payback">—</div>
     <div class="sub" id="t-paybackSub">anni al recupero investimento</div>
     <div class="payback-bar"><div class="payback-fill" id="payback-fill" style="width:0%"></div></div>
@@ -364,10 +364,13 @@ const T={
     prezzoVL:'Prezzo di vendita unitario (€/pz)',costoMPL:'Costo materia prima unitario (€/pz)',costoVarL:'Altri costi variabili unitari (€/pz)',
     costoOraL:'Costo orario manodopera (€/ora, costo azienda)',
     risultati:'Risultati analisi',scenarioDesc:'Seleziona lo scenario da analizzare con il cliente:',
-    tabCrescita:'📈 Scenario crescita — aumento produzione',tabEfficienza:'⚙️ Scenario efficienza — stessa produzione',
-    paybackL:'Payback semplice',paybackSub:'anni al recupero investimento',flussoL:'Flusso netto annuo',
+    tabCrescita:'📈 Scenario crescita — aumento produzione',tabEfficienza:'⚙️ Scenario stabilità — stessa produzione',
+    paybackL:'Payback',paybackSub:'anni al recupero investimento',flussoL:'Flusso netto annuo',
     detFisc:'Dettaglio fiscale — R5 & dismissione',legenda1:'Flusso cumulativo',legenda2:'Break-even',
-    kInvIniz:'Investimento iniziale',kProdAnno:'Produzione R5/anno',kPezziAnno:'pezzi/anno',
+    kInvIniz:'Investimento iniziale',
+    kSuffCrescita:'Scenario Crescita',
+    kSuffStabilita:'Scenario Stabilità',
+   kProdAnno:'Produzione R5/anno',kPezziAnno:'pezzi/anno',
     kIncrProd:'Incremento produttivo',kVsPrecedente:'vs precedente',
     kIncrVend:'Incremento vendite',kIncrMargine:'Incremento margine',kAValore:'a valore',kRispEn:'Risparmio energetico',kPerAnno:'€/anno',
     kProdInv:'Produzione invariata',kStessiPezzi:'stessi pezzi/anno con R5',
@@ -401,10 +404,13 @@ const T={
     prezzoVL:'Unit selling price (€/pc)',costoMPL:'Unit raw material cost (€/pc)',costoVarL:'Other variable unit costs (€/pc)',
     costoOraL:'Labour hourly cost (€/hour, company cost)',
     risultati:'Analysis results',scenarioDesc:'Select the scenario to discuss with the client:',
-    tabCrescita:'📈 Growth scenario — increased production',tabEfficienza:'⚙️ Efficiency scenario — same production',
-    paybackL:'Simple payback',paybackSub:'years to recover investment',flussoL:'Net annual cash flow',
+    tabCrescita:'📈 Growth scenario — increased production',tabEfficienza:'⚙️ Stability scenario — same production',
+    paybackL:'Payback',paybackSub:'years to recover investment',flussoL:'Net annual cash flow',
     detFisc:'Tax detail — R5 & disposal',legenda1:'Cumulative cash flow',legenda2:'Break-even',
-    kInvIniz:'Initial investment',kProdAnno:'R5 production/year',kPezziAnno:'parts/year',
+    kInvIniz:'Initial investment',
+    kSuffCrescita:'Growth Scenario',
+    kSuffStabilita:'Stability Scenario',
+   kProdAnno:'R5 production/year',kPezziAnno:'parts/year',
     kIncrProd:'Production increase',kVsPrecedente:'vs previous',
     kIncrVend:'Sales increase',kIncrMargine:'Incremental margin',kAValore:'by value',kRispEn:'Energy saving',kPerAnno:'€/year',
     kProdInv:'Unchanged output',kStessiPezzi:'same parts/year with R5',
@@ -615,6 +621,10 @@ function renderResults(){
   document.getElementById('res-payback').textContent=fmtAnni(payback);
   document.getElementById('res-flussoNetto').textContent=fmt(flussoAnnuo);
   document.getElementById('res-flussoSub').textContent=scenarioMode==='crescita'?T[lang].flussoSub1:T[lang].flussoSub2;
+  // Label dinamica con suffisso scenario
+  const suff=scenarioMode==='crescita'?T[lang].kSuffCrescita:T[lang].kSuffStabilita;
+  document.getElementById('t-paybackL').textContent=T[lang].paybackL+' — '+suff;
+  document.getElementById('t-flussoL').textContent=T[lang].flussoL+' — '+suff;
   const pct=Math.min(100,isFinite(payback)?(payback/10)*100:100);
   document.getElementById('payback-fill').style.width=pct+'%';
   aggiornaGrafico(c.prezzoR5,c.anniResiduiVecchio,c.costoFiscDisAnnuo,c.benFiscIperAnnuo,c.costoAnnuoFinanz,c.rispEnergia,
@@ -674,9 +684,11 @@ function updatePrintSection(){
   document.getElementById('printFlusso1').textContent=fmt(f1);
   document.getElementById('printSub1').textContent=t.paybackSub;
   document.getElementById('printSub1b').textContent=t.flussoSub1;
+  document.getElementById('printPaybackCrescita').querySelector('.label').textContent=t.paybackL+' — '+t.kSuffCrescita;
+  document.getElementById('printFlussoCrescita').querySelector('.label').textContent=t.flussoL+' — '+t.kSuffCrescita;
   document.getElementById('print-fill-1').style.width=Math.min(100,isFinite(p1)?(p1/10)*100:100)+'%';
   // KPI efficienza
-  const f2=calcFlusso('efficienza');
+  const f2=calcFlusso('stabilita');
   const p2=f2>0?c.prezzoR5/f2:Infinity;
   let h2=`<div class="kpi-row">
     <div class="metric-card"><div class="label">${t.kInvIniz}</div><div class="value">${fmt(c.prezzoR5)}</div><div class="sub">${t.kPrezzo}</div></div>
@@ -692,6 +704,8 @@ function updatePrintSection(){
   document.getElementById('printFlusso2').textContent=fmt(f2);
   document.getElementById('printSub2').textContent=t.paybackSub;
   document.getElementById('printSub2b').textContent=t.flussoSub2;
+  document.getElementById('printPaybackEfficienza').querySelector('.label').textContent=t.paybackL+' — '+t.kSuffStabilita;
+  document.getElementById('printFlussoEfficienza').querySelector('.label').textContent=t.flussoL+' — '+t.kSuffStabilita;
   document.getElementById('print-fill-2').style.width=Math.min(100,isFinite(p2)?(p2/10)*100:100)+'%';
   // Aggiorna label lingua
   const labels=document.querySelectorAll('.scenario-label');
