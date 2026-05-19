@@ -239,11 +239,11 @@
 <!-- SEZ 7 -->
 <div class="section-box">
   <div class="section-title" id="t-sez7">7. Ricavi differenziali</div>
-  <div class="grid3">
-    <div class="field"><label id="t-prezzoVL">Prezzo di vendita unitario (€/pz)</label><input type="number" id="prezzoVendita" value="0.07" step="0.01"></div>
-    <div class="field"><label id="t-costoMPL">Costo materia prima unitario (€/pz)</label><input type="number" id="costoMP" value="0.03" step="0.01"></div>
-    <div class="field"><label id="t-costoVarL">Altri costi variabili unitari (€/pz)</label><input type="number" id="altriCostiVar" value="0.01" step="0.01"></div>
+  <div class="grid2">
+    <div class="field"><label id="t-prezzoVL">Prezzo di vendita unitario (€/pz)</label><input type="number" id="prezzoVendita" value="0.07" step="0.001" min="0"></div>
+    <div class="field"><label id="t-incidenzaCostiL">Incidenza costi variabili (% sul prezzo)</label><input type="number" id="incidenzaCosti" value="57" step="1" min="0" max="100"></div>
   </div>
+  <div class="info-box" id="riepilogoMargine">—</div>
 </div>
 
 <!-- SEZ 8 -->
@@ -361,7 +361,7 @@ const T={
     moldiR5L:'Stampi attivi simultanei (max 5)',chiusureR5L:'Chiusure al minuto (per stampo)',pezziR5L:'Pezzi per stampo per chiusura',
     moldiVL:'Stampi attivi simultanei',chiusureVL:'Chiusure al minuto (per stampo)',pezziVL:'Pezzi per stampo per chiusura',
     kwR5L:'Consumo R5 (kWh/ora)',kwVL:'Consumo vecchia macchina (kWh/ora)',costoKwhL:'Costo energia elettrica (€/kWh)',
-    prezzoVL:'Prezzo di vendita unitario (€/pz)',costoMPL:'Costo materia prima unitario (€/pz)',costoVarL:'Altri costi variabili unitari (€/pz)',
+    prezzoVL:'Prezzo di vendita unitario (€/pz)',incidenzaCostiL:'Incidenza costi variabili (% sul prezzo)',
     costoOraL:'Costo orario manodopera (€/ora, costo azienda)',
     risultati:'Risultati analisi',scenarioDesc:'Seleziona lo scenario da analizzare con il cliente:',
     tabCrescita:'📈 Scenario crescita — aumento produzione',tabEfficienza:'⚙️ Scenario stabilità — stessa produzione',
@@ -401,7 +401,7 @@ const T={
     moldiR5L:'Active moulds simultaneously (max 5)',chiusureR5L:'Closures per minute (per mould)',pezziR5L:'Parts per mould per closure',
     moldiVL:'Active moulds simultaneously',chiusureVL:'Closures per minute (per mould)',pezziVL:'Parts per mould per closure',
     kwR5L:'R5 consumption (kWh/hour)',kwVL:'Previous machine consumption (kWh/hour)',costoKwhL:'Electricity cost (€/kWh)',
-    prezzoVL:'Unit selling price (€/pc)',costoMPL:'Unit raw material cost (€/pc)',costoVarL:'Other variable unit costs (€/pc)',
+    prezzoVL:'Unit selling price (€/pc)',incidenzaCostiL:'Variable costs incidence (% on price)',
     costoOraL:'Labour hourly cost (€/hour, company cost)',
     risultati:'Analysis results',scenarioDesc:'Select the scenario to discuss with the client:',
     tabCrescita:'📈 Growth scenario — increased production',tabEfficienza:'⚙️ Stability scenario — same production',
@@ -442,6 +442,7 @@ function setLang(l){
   ].forEach(id=>{const el=document.getElementById('t-'+id);if(el)el.textContent=t[id];});
   ['btnAcquisto','btnLeasing','tabCrescita','tabEfficienza'].forEach(id=>{const el=document.getElementById('t-'+id);if(el)el.textContent=t[id];});
   document.getElementById('t-opt-si').textContent=t.optSi;
+  const incEl=document.getElementById('t-incidenzaCostiL'); if(incEl) incEl.textContent=t.incidenzaCostiL;
   document.getElementById('t-opt-no').textContent=t.optNo;
   ['turno1','turno2','turno3'].forEach(id=>{const el=document.getElementById('t-'+id);if(el)el.textContent=t[id];});
   calcola();
@@ -499,12 +500,20 @@ function calcola(){
   const deltaProd=Math.max(0,prodR5anno-prodVecchiaAnno);
   const deltaProdPct=prodVecchiaAnno>0?(deltaProd/prodVecchiaAnno)*100:0;
   const prezzoVendita=v('prezzoVendita');
-  const margineUnitario=prezzoVendita-v('costoMP')-v('altriCostiVar');
+  const incidenzaPct=Math.min(100,Math.max(0,v('incidenzaCosti')));
+  const costiVariabiliUnitari=prezzoVendita*(incidenzaPct/100);
+  const margineUnitario=prezzoVendita-costiVariabiliUnitari;
   const margineVecchioAnno=prodVecchiaAnno*margineUnitario;
   const benProduttivo=deltaProd*margineUnitario;
   const incrementoVenditeValore=deltaProd*prezzoVendita;
   const incrementoVenditePct=(prodVecchiaAnno*prezzoVendita)>0?(incrementoVenditeValore/(prodVecchiaAnno*prezzoVendita))*100:0;
   const incrementoMarginePct=margineVecchioAnno>0?(benProduttivo/margineVecchioAnno)*100:0;
+  // Riepilogo margine
+  const rMargine=document.getElementById('riepilogoMargine');
+  if(rMargine){
+    const t2=T[lang];
+    rMargine.innerHTML=`${lang==='it'?'Prezzo vendita':'Selling price'}: <span>€${prezzoVendita.toFixed(3)}/pz</span> · ${lang==='it'?'Costi variabili':'Variable costs'}: <span>${incidenzaPct.toFixed(1)}% = €${costiVariabiliUnitari.toFixed(4)}/pz</span> · ${lang==='it'?'Margine unitario':'Unit margin'}: <span>€${margineUnitario.toFixed(4)}/pz (${(100-incidenzaPct).toFixed(1)}%)</span>`;
+  }
 
   const kwR5=v('kwR5'), kwVecchia=v('kwVecchia'), costoKwh=v('costoKwh');
   const rispEnergia=(kwVecchia-kwR5)*costoKwh*oreAnno;
