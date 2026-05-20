@@ -398,7 +398,7 @@ const T={
     risultati:'Risultati analisi',scenarioDesc:'Seleziona lo scenario da analizzare con il cliente:',
     tabCrescita:'📈 Scenario crescita — aumento produzione',tabEfficienza:'⚙️ Scenario stabilità — stessa produzione',
     paybackL:'Payback',paybackSub:'anni al recupero investimento',flussoL:'Flusso netto annuo',
-    detFisc:'Dettaglio fiscale — R5 & dismissione',legenda1:'Flusso cumulativo',legenda2:'Break-even',
+    detFisc:'Dettaglio fiscale — R5 & dismissione',detFiscNuova:'Dettaglio fiscale — R5',legenda1:'Flusso cumulativo',legenda2:'Break-even',
     kInvIniz:'Investimento iniziale',
     kSuffCrescita:'Scenario Crescita',
     kSuffStabilita:'Scenario Stabilità',
@@ -438,7 +438,7 @@ const T={
     risultati:'Analysis results',scenarioDesc:'Select the scenario to discuss with the client:',
     tabCrescita:'📈 Growth scenario — increased production',tabEfficienza:'⚙️ Stability scenario — same production',
     paybackL:'Payback',paybackSub:'years to recover investment',flussoL:'Net annual cash flow',
-    detFisc:'Tax detail — R5 & disposal',legenda1:'Cumulative cash flow',legenda2:'Break-even',
+    detFisc:'Tax detail — R5 & disposal',detFiscNuova:'Tax detail — R5',legenda1:'Cumulative cash flow',legenda2:'Break-even',
     kInvIniz:'Initial investment',
     kSuffCrescita:'Growth Scenario',
     kSuffStabilita:'Stability Scenario',
@@ -501,15 +501,11 @@ function setTipoInvestimento(tipo){
   const tabStab=document.getElementById('t-tabEfficienza');
   if(tipo==='nuova'){
     tabStab.disabled=true;
-    tabStab.style.opacity='0.4';
-    tabStab.style.cursor='not-allowed';
-    tabStab.title='Non disponibile per acquisto nuova macchina';
+    tabStab.style.display='none';
     if(scenarioMode==='stabilita'){ setScenario('crescita', document.getElementById('t-tabCrescita')); }
   } else {
     tabStab.disabled=false;
-    tabStab.style.opacity='';
-    tabStab.style.cursor='';
-    tabStab.title='';
+    tabStab.style.display='';
   }
   calcola();
 }
@@ -646,13 +642,15 @@ function calcola(){
         <div class="amm-row green-row"><span class="lbl">${t.ammBenef} (R5 × 1,80 × ${(aliq*100).toFixed(0)}%)</span><span class="val">${fmt(benFiscIperAnnuo)}/anno · ${fmt(iperTot)} tot.</span></div>`;
     }
   }
-  ammHTML+=valDismissione>0
-    ?`<div style="height:6px;"></div><div class="section-sep"></div>
-      <div class="amm-row" style="margin-top:6px;"><span class="lbl">${t.ammVNC}</span><span class="val">${fmt(valDismissione)}</span></div>
-      <div class="amm-row"><span class="lbl">${t.ammAnniRes}</span><span class="val">${anniResiduiVecchio} anni</span></div>
-      <div class="amm-row red-row"><span class="lbl">${t.ammMancato} (VNC × ${(aliq*100).toFixed(0)}% ÷ ${anniResiduiVecchio} anni)</span><span class="val">− ${fmt(costoFiscDisAnnuo)}/anno · − ${fmt(costoFiscDisTot)} tot.</span></div>`
-    :`<div style="height:6px;"></div><div class="section-sep"></div>
-      <div class="amm-row" style="margin-top:6px;"><span class="lbl">${t.ammGiaAmm}</span><span class="val">${t.ammGiaAmmVal}</span></div>`;
+  if(tipoInvestimento!=='nuova'){
+    ammHTML+=valDismissione>0
+      ?`<div style="height:6px;"></div><div class="section-sep"></div>
+        <div class="amm-row" style="margin-top:6px;"><span class="lbl">${t.ammVNC}</span><span class="val">${fmt(valDismissione)}</span></div>
+        <div class="amm-row"><span class="lbl">${t.ammAnniRes}</span><span class="val">${anniResiduiVecchio} anni</span></div>
+        <div class="amm-row red-row"><span class="lbl">${t.ammMancato} (VNC × ${(aliq*100).toFixed(0)}% ÷ ${anniResiduiVecchio} anni)</span><span class="val">− ${fmt(costoFiscDisAnnuo)}/anno · − ${fmt(costoFiscDisTot)} tot.</span></div>`
+      :`<div style="height:6px;"></div><div class="section-sep"></div>
+        <div class="amm-row" style="margin-top:6px;"><span class="lbl">${t.ammGiaAmm}</span><span class="val">${t.ammGiaAmmVal}</span></div>`;
+  }
   document.getElementById('ammDetail').innerHTML=ammHTML;
 
   lastCalc={prezzoR5,valDismissione,anniResiduiVecchio,costoFiscDisAnnuo,
@@ -713,6 +711,9 @@ function renderResults(){
   }
   document.getElementById('kpiCards').innerHTML=kpiHTML;
   const payback=flussoAnnuo>0?c.prezzoR5/flussoAnnuo:Infinity;
+  // Titolo dettaglio fiscale dinamico
+  const detFiscEl=document.getElementById('t-detFisc');
+  if(detFiscEl) detFiscEl.textContent=tipoInvestimento==='nuova'?T[lang].detFiscNuova:T[lang].detFisc;
   document.getElementById('res-payback').textContent=fmtAnni(payback);
   document.getElementById('res-flussoNetto').textContent=fmt(flussoAnnuo);
   document.getElementById('res-flussoSub').textContent=scenarioMode==='crescita'?T[lang].flussoSub1:T[lang].flussoSub2;
@@ -826,6 +827,7 @@ window.addEventListener('afterprint', function(){
 });
 
 document.querySelectorAll('input, select').forEach(el=>el.addEventListener('input',calcola));
+setTipoInvestimento('nuova');
 calcola();
 </script>
 </body>
