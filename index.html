@@ -28,6 +28,7 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
   .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .grid4 .field label{min-height:34px;display:flex;align-items:flex-end;}
   .field{display:flex;flex-direction:column;gap:4px;}
   .field label{font-size:12px;color:#666;line-height:1.4;min-height:30px;display:flex;align-items:flex-end;}
   .field input,.field select{width:100%;padding:8px 10px;font-size:14px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#1a1a1a;outline:none;}
@@ -136,6 +137,20 @@
     .scenario-label { display: block !important; font-size: 11px; font-weight: 700; color: #1D9E75; text-transform: uppercase; letter-spacing: .05em; margin: 12px 0 6px; }
     .page-break { page-break-before: always; }
   }
+
+  /* TIPO INVESTIMENTO */
+  .tipo-inv-selector { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:0; }
+  .tipo-inv-card { border:2px solid #e0e0e0; border-radius:10px; padding:18px 20px; cursor:pointer; background:#fff; transition:all .2s; }
+  .tipo-inv-card:hover { border-color:#1D9E75; background:#f9fffe; }
+  .tipo-inv-card.active { border-color:#1D9E75; background:#E1F5EE; }
+  .tipo-inv-card .tipo-icon { font-size:26px; margin-bottom:8px; }
+  .tipo-inv-card .tipo-title { font-size:14px; font-weight:600; color:#1a1a1a; margin-bottom:4px; }
+  .tipo-inv-card .tipo-desc { font-size:12px; color:#888; line-height:1.5; }
+  .tipo-inv-card.active .tipo-title { color:#085041; }
+  .tipo-inv-card.active .tipo-desc { color:#0F6E56; }
+  .sezione-differenziale { transition: opacity .3s; }
+  .sezione-differenziale.hidden { display:none; }
+  .badge-solo { display:inline-block; font-size:11px; padding:2px 10px; border-radius:10px; background:#FEF3C7; color:#92400E; font-weight:500; margin-left:8px; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -161,19 +176,36 @@
   </div>
 </div>
 
+<!-- TIPO INVESTIMENTO -->
+<div class="section-box" id="tipoInvestimentoBox">
+  <div class="section-title" id="t-tipoInvTitle">Tipo di investimento</div>
+  <div class="tipo-inv-selector">
+    <div class="tipo-inv-card active" id="tipo-nuova" onclick="setTipoInvestimento('nuova')">
+      <div class="tipo-icon">🆕</div>
+      <div class="tipo-title" id="t-tipoNuovaTitle">Acquisto nuova macchina</div>
+      <div class="tipo-desc" id="t-tipoNuovaDesc">Valutazione standalone senza confronto con macchina esistente. Payback basato su produzione, energia e beneficio fiscale.</div>
+    </div>
+    <div class="tipo-inv-card" id="tipo-sostituzione" onclick="setTipoInvestimento('sostituzione')">
+      <div class="tipo-icon">🔄</div>
+      <div class="tipo-title" id="t-tipoSostTitle">Sostituzione macchina esistente</div>
+      <div class="tipo-desc" id="t-tipoSostDesc">Confronto con la linea attuale. Calcolo di tutti i differenziali: produttività, energia, manodopera e dismissione cespite.</div>
+    </div>
+  </div>
+</div>
+
 <!-- SEZ 1 -->
 <div class="section-box">
   <div class="section-title" id="t-sez1">1. Investimento</div>
   <div class="grid2" style="margin-bottom:12px;">
     <div class="field"><label id="t-prezzoR5L">Prezzo acquisto R5 (€)</label><input type="number" id="prezzoR5" value="580000" step="10000"></div>
-    <div class="field"><label id="t-valDismL">Valore netto contabile vecchio cespite (€)</label><input type="number" id="valDismissione" value="0" step="5000"></div>
+    <div class="field sezione-differenziale" id="sez1-dismissione"><label id="t-valDismL">Valore netto contabile vecchio cespite (€)</label><input type="number" id="valDismissione" value="0" step="5000"></div>
   </div>
   <div class="grid3">
     <div class="field"><label id="t-italianL">Azienda italiana?</label>
       <select id="isItalian"><option value="si" id="t-opt-si" selected>Sì — iperammortamento 180%</option><option value="no" id="t-opt-no">No — ammortamento ordinario</option></select>
     </div>
     <div class="field"><label id="t-aliqL">Aliquota IRES / IRPEF (%)</label><input type="number" id="aliqTax" value="24" step="1" min="0" max="50"></div>
-    <div class="field"><label id="t-anniResL">Anni residui ammortamento vecchio cespite</label><input type="number" id="anniResiduiVecchio" value="0" step="1" min="0" max="20"></div>
+    <div class="field sezione-differenziale" id="sez1-anniRes"><label id="t-anniResL">Anni residui ammortamento vecchio cespite</label><input type="number" id="anniResiduiVecchio" value="0" step="1" min="0" max="20"></div>
   </div>
   <div class="info-box" id="riepilogoInvestimento">—</div>
 </div>
@@ -197,7 +229,7 @@
   <div class="grid4" style="margin-bottom:12px;">
     <div class="field"><label id="t-turniL">Turni/giorno</label><select id="turniGiorno"><option value="1" id="t-turno1">1 turno</option><option value="2" id="t-turno2" selected>2 turni</option><option value="3" id="t-turno3">3 turni</option></select></div>
     <div class="field"><label id="t-oreL">Ore per turno</label><input type="number" id="orePerTurno" value="8" step="0.5" min="1" max="12"></div>
-    <div class="field"><label id="t-giorniSettL">Giorni lavorativi/settimana (max 7)</label><input type="number" id="giorniSettimana" value="5" step="1" min="1" max="7"></div>
+    <div class="field"><label id="t-giorniSettL">Giorni lavorativi/sett. (max 7)</label><input type="number" id="giorniSettimana" value="5" step="1" min="1" max="7"></div>
     <div class="field"><label id="t-stopL">Giorni di stop annui</label><input type="number" id="giorniStop" value="30" step="1" min="0" max="365"></div>
   </div>
   <div class="info-box" id="riepilogoCalendario">—</div>
@@ -215,7 +247,7 @@
 </div>
 
 <!-- SEZ 5 -->
-<div class="section-box">
+<div class="section-box sezione-differenziale" id="sez5-box">
   <div class="section-title" id="t-sez5">5. Parametri produttivi — macchina precedente</div>
   <div class="grid3" style="margin-bottom:12px;">
     <div class="field"><label id="t-moldiVL">Stampi attivi simultanei</label><input type="number" id="moldiVecchia" value="4" step="1" min="0"></div>
@@ -230,15 +262,15 @@
   <div class="section-title" id="t-sez6">6. Efficienza energetica</div>
   <div class="grid3" style="margin-bottom:12px;">
     <div class="field"><label id="t-kwR5L">Consumo R5 (kWh/ora)</label><input type="number" id="kwR5" value="17" step="1"></div>
-    <div class="field"><label id="t-kwVL">Consumo vecchia macchina (kWh/ora)</label><input type="number" id="kwVecchia" value="40" step="1"></div>
+    <div class="field sezione-differenziale" id="sez6-kwVecchia"><label id="t-kwVL">Consumo vecchia macchina (kWh/ora)</label><input type="number" id="kwVecchia" value="40" step="1"></div>
     <div class="field"><label id="t-costoKwhL">Costo energia elettrica (€/kWh)</label><input type="number" id="costoKwh" value="0.16" step="0.01"></div>
   </div>
   <div class="info-box" id="riepilogoEnergia">—</div>
 </div>
 
 <!-- SEZ 7 -->
-<div class="section-box">
-  <div class="section-title" id="t-sez7">7. Ricavi differenziali</div>
+<div class="section-box" id="sez7-box">
+  <div class="section-title" id="t-sez7">7. Ricavi differenziali <span style="font-size:10px;font-weight:400;color:#1D9E75;text-transform:none;letter-spacing:0;">— valori condivisi tra scenari</span></div>
   <div class="grid2">
     <div class="field"><label id="t-prezzoVL">Prezzo di vendita unitario (€/pz)</label><input type="number" id="prezzoVendita" value="0.07" step="0.001" min="0"></div>
     <div class="field"><label id="t-incidenzaCostiL">Incidenza costi variabili (% sul prezzo)</label><input type="number" id="incidenzaCosti" value="57" step="1" min="0" max="100"></div>
@@ -247,7 +279,7 @@
 </div>
 
 <!-- SEZ 8 -->
-<div class="section-box">
+<div class="section-box sezione-differenziale" id="sez8-box">
   <div class="section-title" id="t-sez8">8. Risparmio manodopera — scenario stabilità</div>
   <div style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.6;" id="t-sez8desc">A parità di produzione attuale, calcola quante ore sarebbero necessarie con la R5 e il relativo risparmio.</div>
   <div class="field" style="max-width:33%;"><label id="t-costoOraL">Costo orario manodopera (€/ora, costo azienda)</label><input type="number" id="costoOraManodopera" value="25" step="1" min="0"></div>
@@ -347,7 +379,7 @@ let finMode='acquisto', scenarioMode='crescita', paybackChart=null, lastCalc={},
 
 const T={
   it:{
-    sez1:'1. Investimento',sez2:'2. Modalità di finanziamento',sez3:'3. Calendario produttivo',
+    tipoInvTitle:'Tipo di investimento',tipoNuovaTitle:'Acquisto nuova macchina',tipoNuovaDesc:'Valutazione standalone senza confronto con macchina esistente. Payback basato su produzione, energia e beneficio fiscale.',tipoSostTitle:'Sostituzione macchina esistente',tipoSostDesc:'Confronto con la linea attuale. Calcolo di tutti i differenziali: produttività, energia, manodopera e dismissione cespite.',sez1:'1. Investimento',sez2:'2. Modalità di finanziamento',sez3:'3. Calendario produttivo',
     sez4:'4. Parametri produttivi — Form iQ R5',sez5:'5. Parametri produttivi — macchina precedente',
     sez6:'6. Efficienza energetica',sez7:'7. Ricavi differenziali',sez8:'8. Risparmio manodopera — scenario stabilità',
     sez8desc:'A parità di produzione attuale, calcola quante ore sarebbero necessarie con la R5 e il relativo risparmio.',
@@ -357,7 +389,7 @@ const T={
     btnAcquisto:'Acquisto diretto',btnLeasing:'Leasing finanziario',
     vitaUtileL:'Vita utile ammortamento R5 (anni)',durataL:'Durata leasing (anni)',tassoL:'Tasso annuo leasing (%)',accontoL:'Acconto iniziale (%)',
     turniL:'Turni/giorno',turno1:'1 turno',turno2:'2 turni',turno3:'3 turni',
-    oreL:'Ore per turno',giorniSettL:'Giorni lavorativi/settimana (max 7)',stopL:'Giorni di stop annui',
+    oreL:'Ore per turno',giorniSettL:'Giorni lavorativi/sett. (max 7)',stopL:'Giorni di stop annui',
     moldiR5L:'Stampi attivi simultanei (max 5)',chiusureR5L:'Chiusure al minuto (per stampo)',pezziR5L:'Pezzi per stampo per chiusura',
     moldiVL:'Stampi attivi simultanei',chiusureVL:'Chiusure al minuto (per stampo)',pezziVL:'Pezzi per stampo per chiusura',
     kwR5L:'Consumo R5 (kWh/ora)',kwVL:'Consumo vecchia macchina (kWh/ora)',costoKwhL:'Costo energia elettrica (€/kWh)',
@@ -387,7 +419,7 @@ const T={
     calGiorni:'gg/sett',calStop:'Stop',calProd:'Giorni produttivi netti',calOre:'Ore/anno',turniLabel:'turni ×',perAnno:'/anno',
   },
   en:{
-    sez1:'1. Investment',sez2:'2. Financing method',sez3:'3. Production calendar',
+    tipoInvTitle:'Investment type',tipoNuovaTitle:'New machine purchase',tipoNuovaDesc:'Standalone evaluation without comparison to existing machine. Payback based on production, energy and tax benefit.',tipoSostTitle:'Replacement of existing machine',tipoSostDesc:'Comparison with current line. Full differential analysis: productivity, energy, labour and asset disposal.',sez1:'1. Investment',sez2:'2. Financing method',sez3:'3. Production calendar',
     sez4:'4. Production parameters — Form iQ R5',sez5:'5. Production parameters — previous machine',
     sez6:'6. Energy efficiency',sez7:'7. Differential revenues',sez8:'8. Labour savings — stability scenario',
     sez8desc:'Based on current production output, calculates how many hours would be needed with the R5 and the resulting labour savings.',
@@ -443,8 +475,42 @@ function setLang(l){
   ['btnAcquisto','btnLeasing','tabCrescita','tabEfficienza'].forEach(id=>{const el=document.getElementById('t-'+id);if(el)el.textContent=t[id];});
   document.getElementById('t-opt-si').textContent=t.optSi;
   const incEl=document.getElementById('t-incidenzaCostiL'); if(incEl) incEl.textContent=t.incidenzaCostiL;
+  // Aggiorna testi tipo investimento
+  ['tipoInvTitle','tipoNuovaTitle','tipoNuovaDesc','tipoSostTitle','tipoSostDesc'].forEach(k=>{
+    const el=document.getElementById('t-'+k); if(el&&t[k]) el.textContent=t[k];
+  });
   document.getElementById('t-opt-no').textContent=t.optNo;
   ['turno1','turno2','turno3'].forEach(id=>{const el=document.getElementById('t-'+id);if(el)el.textContent=t[id];});
+  calcola();
+}
+
+let tipoInvestimento='nuova';
+
+function setTipoInvestimento(tipo){
+  tipoInvestimento=tipo;
+  // Aggiorna card attiva
+  document.getElementById('tipo-nuova').classList.toggle('active', tipo==='nuova');
+  document.getElementById('tipo-sostituzione').classList.toggle('active', tipo==='sostituzione');
+  // Mostra/nascondi sezioni differenziali
+  const diff=['sez5-box','sez8-box','sez1-dismissione','sez1-anniRes','sez6-kwVecchia'];
+  diff.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('hidden', tipo==='nuova');
+  });
+  // Gestione tab scenari: in modalità nuova, solo crescita disponibile
+  const tabStab=document.getElementById('t-tabEfficienza');
+  if(tipo==='nuova'){
+    tabStab.disabled=true;
+    tabStab.style.opacity='0.4';
+    tabStab.style.cursor='not-allowed';
+    tabStab.title='Non disponibile per acquisto nuova macchina';
+    if(scenarioMode==='stabilita'){ setScenario('crescita', document.getElementById('t-tabCrescita')); }
+  } else {
+    tabStab.disabled=false;
+    tabStab.style.opacity='';
+    tabStab.style.cursor='';
+    tabStab.title='';
+  }
   calcola();
 }
 
@@ -478,7 +544,7 @@ function calcola(){
   const isItalian=document.getElementById('isItalian').value==='si';
   const aliq=v('aliqTax')/100, vita=v('vitaUtile')||8;
   const costoFiscDisTot=valDismissione*aliq;
-  const costoFiscDisAnnuo=valDismissione>0?costoFiscDisTot/anniResiduiVecchio:0;
+  const costoFiscDisAnnuo=(tipoInvestimento==='nuova'||valDismissione===0)?0:costoFiscDisTot/anniResiduiVecchio;
 
   const turni=v('turniGiorno'), orePerTurno=v('orePerTurno');
   const giorniSettimana=Math.min(7,Math.max(1,v('giorniSettimana')));
@@ -497,7 +563,8 @@ function calcola(){
   const moldiVecchia=v('moldiVecchia'), pezziVecchia=v('pezziVecchia');
   const prodVecchiaOra=moldiVecchia*chiusureVecchiaora*pezziVecchia, prodVecchiaAnno=prodVecchiaOra*oreAnno;
 
-  const deltaProd=Math.max(0,prodR5anno-prodVecchiaAnno);
+  // In modalità 'nuova macchina' non c'è confronto con precedente
+  const deltaProd=tipoInvestimento==='nuova'?prodR5anno:Math.max(0,prodR5anno-prodVecchiaAnno);
   const deltaProdPct=prodVecchiaAnno>0?(deltaProd/prodVecchiaAnno)*100:0;
   const prezzoVendita=v('prezzoVendita');
   const incidenzaPct=Math.min(100,Math.max(0,v('incidenzaCosti')));
@@ -516,16 +583,20 @@ function calcola(){
   }
 
   const kwR5=v('kwR5'), kwVecchia=v('kwVecchia'), costoKwh=v('costoKwh');
-  const rispEnergia=(kwVecchia-kwR5)*costoKwh*oreAnno;
+  // In modalità nuova: il risparmio energetico non è differenziale ma costo assoluto evitato
+  const rispEnergia=tipoInvestimento==='nuova'?0:(v('kwVecchia')-kwR5)*costoKwh*oreAnno;
 
   const costoOra=v('costoOraManodopera');
   const oreNecessarieR5=prodR5ora>0?prodVecchiaAnno/prodR5ora:oreAnno;
-  const oreRisparmiate=Math.max(0,oreAnno-oreNecessarieR5);
+  const oreRisparmiate=tipoInvestimento==='nuova'?0:Math.max(0,oreAnno-oreNecessarieR5);
   const valoreOreRisparmiate=oreRisparmiate*costoOra;
 
-  document.getElementById('riepilogoInvestimento').innerHTML=valDismissione>0
-    ?`${t.ammPrezzoR5}: <span>${fmt(prezzoR5)}</span> · ${t.ammVNC}: <span>${fmt(valDismissione)}</span> · ${t.ammMancato}: <span>${fmt(costoFiscDisTot)}</span> / ${anniResiduiVecchio} anni: <span>${fmt(costoFiscDisAnnuo)}/anno</span>`
-    :`${t.ammPrezzoR5}: <span>${fmt(prezzoR5)}</span> · ${t.ammGiaAmm}: <span>${t.ammGiaAmmVal}</span>`;
+  document.getElementById('riepilogoInvestimento').innerHTML=
+    tipoInvestimento==='nuova'
+      ?`${t.ammPrezzoR5}: <span>${fmt(prezzoR5)}</span>`
+      :valDismissione>0
+        ?`${t.ammPrezzoR5}: <span>${fmt(prezzoR5)}</span> · ${t.ammVNC}: <span>${fmt(valDismissione)}</span> · ${t.ammMancato}: <span>${fmt(costoFiscDisTot)}</span> / ${anniResiduiVecchio} anni: <span>${fmt(costoFiscDisAnnuo)}/anno</span>`
+        :`${t.ammPrezzoR5}: <span>${fmt(prezzoR5)}</span> · ${t.ammGiaAmm}: <span>${t.ammGiaAmmVal}</span>`;
 
   document.getElementById('riepilogoProdR5').innerHTML=
     `R5: <span>${fmtN(moldiR5)} × ${chiusureR5min}/min × 60 = ${fmtN(chiusureR5ora)}/h × ${pezziR5} = ${fmtN(prodR5ora)} pz/h</span> · Produzione: <span>${fmtN(prodR5anno)} pz/anno</span>`;
@@ -604,16 +675,31 @@ function renderResults(){
   const t=T[lang];
   let kpiHTML=''; const flussoAnnuo=calcFlusso(scenarioMode);
   if(scenarioMode==='crescita'){
-    kpiHTML=`<div class="kpi-row">
-      <div class="metric-card"><div class="label">${t.kInvIniz}</div><div class="value">${fmt(c.prezzoR5)}</div><div class="sub">${t.kPrezzo}</div></div>
-      <div class="metric-card"><div class="label">${t.kProdAnno}</div><div class="value good">${fmtN(c.prodR5anno)}</div><div class="sub">${t.kPezziAnno}</div></div>
-      <div class="metric-card"><div class="label">${t.kIncrProd}</div><div class="value good">${fmtN(c.deltaProd)}</div><div class="badge">+${c.deltaProdPct.toFixed(1)}% ${t.kVsPrecedente}</div></div>
-    </div>
-    <div class="kpi-row">
-      <div class="metric-card"><div class="label">${t.kIncrVend}</div><div class="value good">${fmt(c.incrementoVenditeValore)}</div><div class="badge">+${c.incrementoVenditePct.toFixed(1)}% ${t.kAValore}</div></div>
-      <div class="metric-card"><div class="label">${t.kIncrMargine}</div><div class="value good">${fmt(c.benProduttivo)}</div><div class="badge">+${c.incrementoMarginePct.toFixed(1)}% ${t.kAValore}</div></div>
-      <div class="metric-card"><div class="label">${t.kRispEn}</div><div class="value good">${fmt(c.rispEnergia)}</div><div class="sub">${t.kPerAnno}</div></div>
-    </div>`;
+    if(tipoInvestimento==='nuova'){
+      // Modalità nuova: 1 card produzione, vendite e margine senza %
+      kpiHTML=`<div class="kpi-row">
+        <div class="metric-card"><div class="label">${t.kInvIniz}</div><div class="value">${fmt(c.prezzoR5)}</div><div class="sub">${t.kPrezzo}</div></div>
+        <div class="metric-card"><div class="label">${t.kProdAnno}</div><div class="value good">${fmtN(c.prodR5anno)}</div><div class="sub">${t.kPezziAnno}</div></div>
+        <div class="metric-card"><div class="label">${t.kRispEn}</div><div class="value good">${fmt(c.rispEnergia)}</div><div class="sub">${t.kPerAnno}</div></div>
+      </div>
+      <div class="kpi-row">
+        <div class="metric-card"><div class="label">${t.kIncrVend}</div><div class="value good">${fmt(c.incrementoVenditeValore)}</div><div class="sub">${t.kPerAnno}</div></div>
+        <div class="metric-card"><div class="label">${t.kIncrMargine}</div><div class="value good">${fmt(c.benProduttivo)}</div><div class="sub">${t.kPerAnno}</div></div>
+        <div class="metric-card"><div class="label">${t.kRispEn}</div><div class="value" style="font-size:14px;color:#888;">${lang==='it'?'Non applicabile':'Not applicable'}</div><div class="sub">${lang==='it'?'nessuna macchina precedente':'no previous machine'}</div></div>
+      </div>`;
+    } else {
+      // Modalità sostituzione: con % differenziale
+      kpiHTML=`<div class="kpi-row">
+        <div class="metric-card"><div class="label">${t.kInvIniz}</div><div class="value">${fmt(c.prezzoR5)}</div><div class="sub">${t.kPrezzo}</div></div>
+        <div class="metric-card"><div class="label">${t.kProdAnno}</div><div class="value good">${fmtN(c.prodR5anno)}</div><div class="sub">${t.kPezziAnno}</div></div>
+        <div class="metric-card"><div class="label">${t.kIncrProd}</div><div class="value good">${fmtN(c.deltaProd)}</div><div class="badge">+${c.deltaProdPct.toFixed(1)}% ${t.kVsPrecedente}</div></div>
+      </div>
+      <div class="kpi-row">
+        <div class="metric-card"><div class="label">${t.kIncrVend}</div><div class="value good">${fmt(c.incrementoVenditeValore)}</div><div class="badge">+${c.incrementoVenditePct.toFixed(1)}% ${t.kAValore}</div></div>
+        <div class="metric-card"><div class="label">${t.kIncrMargine}</div><div class="value good">${fmt(c.benProduttivo)}</div><div class="badge">+${c.incrementoMarginePct.toFixed(1)}% ${t.kAValore}</div></div>
+        <div class="metric-card"><div class="label">${t.kRispEn}</div><div class="value good">${fmt(c.rispEnergia)}</div><div class="sub">${t.kPerAnno}</div></div>
+      </div>`;
+    }
   } else {
     kpiHTML=`<div class="kpi-row">
       <div class="metric-card"><div class="label">${t.kInvIniz}</div><div class="value">${fmt(c.prezzoR5)}</div><div class="sub">${t.kPrezzo}</div></div>
